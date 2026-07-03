@@ -15,4 +15,9 @@ RUN a2enmod headers && a2enconf noindex
 
 RUN usermod -s /bin/bash www-data
 RUN chown -R www-data:www-data /var/www
-USER www-data:www-data
+
+# run as root (the official image's default): the entrypoint must be able to
+# chown/chmod the render disk mounted at /var/www/html on first boot — as
+# www-data the wordpress copy fails ("tar: .: Cannot change mode to rwxrwxr-x:
+# Operation not permitted") and the deploy exits with status 2. apache worker
+# processes still run as www-data; only pid 1 and the entrypoint are root.

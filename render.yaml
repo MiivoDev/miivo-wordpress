@@ -1,39 +1,50 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# REFERENCE ONLY — these services are managed in the Render dashboard, not
+# synced from this file (no Blueprint instance points at this repo).
+#
+# This file previously described the ORIGINAL blueprint ("wordpress" +
+# "mysql-wordpress", i.e. wordpress-fuva.onrender.com, now suspended). The
+# live service is miivo-wordpress-new, which was created manually in the
+# dashboard — and, until 2026-07-03, WITHOUT a persistent disk: a deploy that
+# day wiped all of wp-content/uploads because uploads lived on ephemeral
+# instance storage. A disk is now attached. If you recreate this service,
+# the disk at /var/www/html is NOT optional.
+# ─────────────────────────────────────────────────────────────────────────────
 services:
+# live headless CMS backend for www.miivo.ai (serves /wp-json + /wp-content
+# to the next.js app; noindexed via apache config in the Dockerfile)
 - type: web
-  name: wordpress
+  name: miivo-wordpress-new
+  repo: https://github.com/MiivoDev/miivo-wordpress
+  branch: master
   env: docker
-  plan: standard
-  autoDeploy: false
+  plan: starter
+  region: oregon
+  autoDeploy: true # pushes to master deploy automatically
   disk:
-    name: wordpress
-    mountPath: /var/www/html
-    sizeGB: 20
+    name: wordpress-data
+    mountPath: /var/www/html # wordpress core + wp-content/uploads live here
+    sizeGB: 2 # resizable up (never down) in the dashboard
   envVars:
+  - key: WORDPRESS_CONFIG_EXTRA
+    sync: false # WP_HOME / WP_SITEURL
   - key: WORDPRESS_DB_HOST
-    fromService:
-      name: mysql-wordpress
-      type: pserv
-      property: host
+    sync: false # mysql-wordpress private service
   - key: WORDPRESS_DB_NAME
-    fromService:
-      name: mysql-wordpress
-      type: pserv
-      envVarKey: MYSQL_DATABASE
+    sync: false
   - key: WORDPRESS_DB_USER
-    fromService:
-      name: mysql-wordpress
-      type: pserv
-      envVarKey: MYSQL_USER
+    sync: false
   - key: WORDPRESS_DB_PASSWORD
-    fromService:
-      name: mysql-wordpress
-      type: pserv
-      envVarKey: MYSQL_PASSWORD
+    sync: false
+
+# shared mysql (created by the original blueprint, still the live database
+# for miivo-wordpress-new; internal hostname mysql-wordpress-08gb)
 - type: pserv
   name: mysql-wordpress
   repo: https://github.com/render-examples/mysql.git
   env: docker
   plan: standard
+  region: oregon
   autoDeploy: false
   disk:
     name: mysql-wordpress
@@ -41,10 +52,10 @@ services:
     sizeGB: 20
   envVars:
   - key: MYSQL_DATABASE
-    value: mysql
+    sync: false
   - key: MYSQL_USER
-    value: mysql
+    sync: false
   - key: MYSQL_PASSWORD
-    generateValue: true
+    sync: false
   - key: MYSQL_ROOT_PASSWORD
-    generateValue: true
+    sync: false
