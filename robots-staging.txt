@@ -1,0 +1,7 @@
+# headless CMS backend for www.miivo.ai — noindexed via the X-Robots-Tag
+# header (see noindex.conf). deliberately crawlable for now: google must be
+# able to re-crawl the already-indexed urls to see the noindex and drop them.
+# flip to "Disallow: /" only once site:miivo-wordpress-new.onrender.com
+# returns no results (typically 2-6 weeks after deploy).
+User-agent: *
+Allow: /
